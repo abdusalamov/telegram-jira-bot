@@ -1,0 +1,25 @@
+{
+  "name": "telegram-jira-bot",
+  "version": "0.1.0",
+  "main": "dist/app.js",
+  "author": "Renat Abdusalamov <renat@abdusalamov.com>",
+  "license": "MIT",
+  "repository": "https://github.com/abdusalamov/telegram-jira-bot.git",
+  "scripts": {
+    "start": "tsc && node dist/app.js",
+    "dev": "tsc --watch & nodemon dist/app.js"
+  },
+  "dependencies": {
+    "@types/node": "^10.12.24",
+    "@types/node-telegram-bot-api": "^0.30.4",
+    "jira-client": "^6.6.0",
+    "lodash": "^4.17.11",
+    "node-telegram-bot-api": "^0.30.0",
+    "socks5-https-client": "^1.2.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.120",
+    "nodemon": "^1.18.10",
+    "typescript": "^3.3.3"
+  }
+}
