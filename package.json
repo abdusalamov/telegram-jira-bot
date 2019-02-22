@@ -6,8 +6,8 @@
   "license": "MIT",
   "repository": "https://github.com/abdusalamov/telegram-jira-bot.git",
   "scripts": {
-    "start": "tsc && node dist/app.js",
-    "dev": "tsc --watch & nodemon dist/app.js"
+    "start": "./node_modules/typescript/bin/tsc && node dist/app.js",
+    "dev": "./node_modules/typescript/bin/tsc --watch & nodemon dist/app.js"
   },
   "dependencies": {
     "@types/node": "^10.12.24",
