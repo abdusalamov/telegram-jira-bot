@@ -77,10 +77,10 @@ export async function inlineSearch(query: any, transports: TranportObjects) {
       message_text: issue.key
     }
   }));
-	if (issues){
-		telegram.answerInlineQuery(query.id, suggestions);
-	} else {
-		telegram.answerInlineQuery(query.id, []);
-	}
+  if (issues){
+    telegram.answerInlineQuery(query.id, suggestions);
+  } else {
+    telegram.answerInlineQuery(query.id, []);
+  }
 }
 
