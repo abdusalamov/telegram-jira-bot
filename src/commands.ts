@@ -1,10 +1,14 @@
 import { Message, SendMessageOptions, CallbackQuery, EditMessageTextOptions, InlineQueryResultArticle } from './transports/telegram';
 import _ from 'lodash';
 import { TranportObjects } from './app';
-import { formatMessage, addDescription } from './helpers';
+import { formatMessage, addDescription, getUsers, checkPermissions } from './helpers';
 
 
 export async function enrichIssues(msg: Message, match: string[], transports: TranportObjects) {
+  if (!checkPermissions(msg && msg.from && msg.from.username || '')) {
+    return;
+  }
+
   const { jira, telegram } = transports;
 
   telegram.sendChatAction(msg.chat.id, "typing");
@@ -39,7 +43,101 @@ export async function enrichIssues(msg: Message, match: string[], transports: Tr
   telegram.sendMessage(<number>chatId, <string>resp, <SendMessageOptions>options);
 }
 
+export async function createIssue(msg: Message, project: string, summary: string, assigner: string | undefined, transports: TranportObjects) {
+  if (!checkPermissions(msg && msg.from && msg.from.username || '')) {
+    return;
+  }
+
+  const { jira, telegram } = transports;
+  
+  telegram.sendChatAction(msg.chat.id, "typing");
+  
+  interface JiraNewIssue {
+    fields: {
+      project: {
+        key: string
+      },
+      summary: string,
+      assignee?: {
+        name: string
+      },
+      reporter?: {
+        name: string
+      },
+      issuetype: {
+        name: string
+      }
+    }
+  }
+
+  const issue: JiraNewIssue = {
+    fields: {
+      project: {
+        key: project
+      },
+      summary,
+      assignee: undefined,
+      reporter: undefined,
+      issuetype: {
+        name: 'Task'
+      }
+    }
+  };
+
+  const users = getUsers();
+  const user = users[<string>assigner];
+  if (user) {
+    issue.fields.assignee = {
+      name: user
+    };
+  }
+  // todo: cant set reporter — {"errorMessages":[],"errors":{"reporter":"Field 'reporter' cannot be set. It is not on the appropriate screen, or unknown."}}
+  /* const reporter = users[msg && msg.from && msg.from.username || ''];
+  if (reporter) {
+    issue.fields.reporter = {
+      name: reporter
+    };
+  } */
+  
+  const createdIssue = await jira.createIssue(issue);
+  if (!createdIssue) {
+    return;
+  }
+
+  const { issues } = await jira.getIssues([createdIssue.key] as Array<string>);
+  if (!issues || !issues.length) {
+    return;
+  }
+
+  const chatId = msg.chat.id;
+  const resp = _.map(issues, formatMessage).join('\n\n');
+  const options = {
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_to_message_id: msg.message_id,
+    reply_markup: {}
+  };
+
+  if (issues.length === 1) {
+    options.reply_markup = {
+      inline_keyboard: [[
+        {
+          text: `Show description`,
+          callback_data: 'show_description'
+        }
+      ]]
+    };
+  }
+
+  telegram.sendMessage(<number>chatId, <string>resp, <SendMessageOptions>options);
+
+}
+
 export async function onKeyboardRequest(callbackQuery: CallbackQuery, match: string[], transports: TranportObjects) {
+  if (!checkPermissions(callbackQuery && callbackQuery.from && callbackQuery.from.username || '')) {
+    return;
+  }
+  
   const { jira, telegram } = transports;
   if (!callbackQuery.message) {
     return;
@@ -61,6 +159,9 @@ export async function onKeyboardRequest(callbackQuery: CallbackQuery, match: str
 }
 
 export async function inlineSearch(query: any, transports: TranportObjects) {
+  if (!checkPermissions(query && query.from && query.from.username || '')) {
+    return;
+  }
   const { jira, telegram } = transports;
   const { issues } = await jira.getIssuesByName(query.query);
   const suggestions = _.map(issues, (issue: any) => (<InlineQueryResultArticle>{

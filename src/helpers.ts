@@ -23,3 +23,23 @@ export const formatMessage = (obj: Issue) => {
 export const addDescription = (text: string, description: string) => {
   return `${text}\nDescription:\n${description}`;
 };
+
+interface Result {
+  [tguser: string]: string
+}
+
+export const getUsers = () => {
+  const users = process.env.USERS || '';
+  const pairs = users.split(process.env.USERS_DELIMITER || ',');
+  const result: Result = {};
+  pairs.forEach((str: string) => {
+    const [ telegramUser, jiraUser ] = str.split(':');
+    result[telegramUser] = <string>jiraUser;
+  });
+  return result;
+};
+
+export const checkPermissions = (username: string) => {
+  const users = getUsers();
+  return !!users[username];
+}

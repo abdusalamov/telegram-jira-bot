@@ -35,6 +35,7 @@ class JiraTransport {
       });
       return issues;
     } catch(e) {
+      console.log(e);
       return false;
     }
   }
@@ -46,6 +47,16 @@ class JiraTransport {
       });
       return issues;
     } catch(e) {
+      return false;
+    }
+  }
+
+  public async createIssue(issue: object) {
+    try {
+      const issues = await this.jira.addNewIssue(issue);
+      return issues;
+    } catch(e) {
+      console.log(e);
       return false;
     }
   }
