@@ -35,7 +35,7 @@ class JiraTransport {
       });
       return issues;
     } catch(e) {
-      console.log(e);
+      console.log(e.message);
       return false;
     }
   }
@@ -47,6 +47,7 @@ class JiraTransport {
       });
       return issues;
     } catch(e) {
+      console.log(e.message);
       return false;
     }
   }
@@ -56,7 +57,7 @@ class JiraTransport {
       const issues = await this.jira.addNewIssue(issue);
       return issues;
     } catch(e) {
-      console.log(e);
+      console.log(e.message);
       return false;
     }
   }

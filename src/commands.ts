@@ -58,6 +58,7 @@ export async function createIssue(msg: Message, project: string, summary: string
         key: string
       },
       summary: string,
+      description?: string,
       assignee?: {
         name: string
       },
@@ -76,6 +77,7 @@ export async function createIssue(msg: Message, project: string, summary: string
         key: project
       },
       summary,
+      description: msg.reply_to_message && msg.reply_to_message.text || '',
       assignee: undefined,
       reporter: undefined,
       issuetype: {
@@ -91,13 +93,13 @@ export async function createIssue(msg: Message, project: string, summary: string
       name: user
     };
   }
-  // todo: cant set reporter — {"errorMessages":[],"errors":{"reporter":"Field 'reporter' cannot be set. It is not on the appropriate screen, or unknown."}}
-  /* const reporter = users[msg && msg.from && msg.from.username || ''];
+
+  const reporter = users[msg && msg.from && msg.from.username || ''];
   if (reporter) {
     issue.fields.reporter = {
       name: reporter
     };
-  } */
+  }
   
   const createdIssue = await jira.createIssue(issue);
   if (!createdIssue) {

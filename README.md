@@ -24,7 +24,7 @@ You must specify the following environment variables:
 | -------- | ----------- |
 | JIRA_HOSTNAME |	The hostname of your Jira instance, for example, yourteam.atlassian.net |
 | JIRA_USER |	The user from under whom interaction with Jira will be made| 
-| JIRA_PASSWORD |	password| 
+| JIRA_PASSWORD |	password or API key| 
 | USERS |	Associated list telegram users with jira users| 
 | USERS_DELIMITER |	`,` `\n` or space| 
 | TELEGRAM_TOKEN |	telegram bot token that you received when creating it|
