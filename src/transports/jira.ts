@@ -1,5 +1,9 @@
 import JiraApi from 'jira-client';
 
+export interface Attach {
+  filename: string
+};
+
 interface ConfigInterface {
   host: string,
   protocol: string,
@@ -76,6 +80,16 @@ class JiraTransport {
     try {
       const users = await this.jira.searchUsers({ username });
       return users.length ? users[0] : null;
+    } catch(e) {
+      console.log(e.message);
+      return false;
+    }
+  }
+
+  public async addAttachmentOnIssue(issueId: string, readStream: any) {
+    try {
+      const attach = await this.jira.addAttachmentOnIssue(issueId, readStream);
+      return attach;
     } catch(e) {
       console.log(e.message);
       return false;

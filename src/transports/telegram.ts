@@ -35,20 +35,20 @@ class TelegramTransport extends EventEmitter {
     }
     this.regExp = /([A-Z]{2,8}-[0-9]{1,5})/g;
     this.createIssueRegExp = /\/(?:create|add)(?:\s+(?:task|issue))?(?:\s+in)?\s+([A-Z]{2,8})\s+([^@]*)\s?(?:@(.+))?/;
-    this.createCommentRegExp = /\/comment\s([A-Z]{2,8}-[0-9]{1,5})\s((?:.|\n)*)/;
+    this.createCommentRegExp = /\/comment\s([A-Z]{2,8}-[0-9]{1,5})\s?((?:.|\n)*)/;
     this.connect();
   }
 
   private connect() {
     this.bot = new TelegramBot(this.token, this.options);
-    this.bot.onText(this.regExp, this.onMessage.bind(this));
+    this.bot.onText(this.regExp, this.onEnrich.bind(this));
     this.bot.onText(this.createIssueRegExp, this.onCreateIssue.bind(this));
     this.bot.onText(this.createCommentRegExp, this.onCreateComment.bind(this));
     this.bot.on('callback_query', this.onCallbackRequest.bind(this));
     this.bot.on('inline_query', this.onInlineSearchRequest.bind(this));
   }
 
-  private async onMessage(msg: Message) {
+  private async onEnrich(msg: Message) {
     if (!msg.text) {
       return;
     }
@@ -61,7 +61,7 @@ class TelegramTransport extends EventEmitter {
       return;
     }
 
-    this.emit('message', msg, match);
+    this.emit('enrich', msg, match);
   }
 
   private async onCreateIssue(msg: Message) {  
@@ -74,7 +74,7 @@ class TelegramTransport extends EventEmitter {
     this.emit('createIssue', msg, project, summary, assigner);
   }
 
-  private async onCreateComment(msg: Message) {  
+  private async onCreateComment(msg: Message) {
     if (!msg.text) {
       return;
     }
@@ -118,6 +118,10 @@ class TelegramTransport extends EventEmitter {
 
   public async sendMessage(chatId: number, resp: string, options?: object) {
     return this.bot.sendMessage(<number>chatId, <string>resp, <TelegramBot.SendMessageOptions>options);
+  }
+
+  public getFile(fileId: string) {
+    return this.bot.getFileStream(fileId);
   }
 }
 

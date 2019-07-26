@@ -31,7 +31,7 @@ class App {
   }
 
   run() {
-    this.transports.telegram.on('message', (msg, match) => {
+    this.transports.telegram.on('enrich', (msg, match) => {
       commands.enrichIssues(msg, match, this.transports);
     });
     this.transports.telegram.on('createIssue', (msg, project, summary, assigner) => {

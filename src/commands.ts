@@ -1,4 +1,5 @@
 import { Message, SendMessageOptions, CallbackQuery, EditMessageTextOptions, InlineQueryResultArticle } from './transports/telegram';
+import { Attach } from './transports/jira';
 import _ from 'lodash';
 import { TranportObjects } from './app';
 import { formatMessage, addDescription, getUsers, checkPermissions } from './helpers';
@@ -136,9 +137,27 @@ export async function createIssue(msg: Message, project: string, summary: string
 
 export async function createComment(msg: Message, issueKey: string, comment: string, transports: TranportObjects) {
   const telegramUsername = msg && msg.from && msg.from.username || '';
+  const text = comment || (msg && msg.reply_to_message && msg.reply_to_message.caption || '');
+  const photos = msg && msg.reply_to_message && msg.reply_to_message.photo || [];
+  const document = msg && msg.reply_to_message && msg.reply_to_message.document;
+  const audio = msg && msg.reply_to_message && msg.reply_to_message.audio;
+  const video = msg && msg.reply_to_message && msg.reply_to_message.audio;
+  const voice = msg && msg.reply_to_message && msg.reply_to_message.voice;
+  const attaches = _.compact([
+    ...photos,
+    document,
+    audio,
+    video,
+    voice
+  ]);
+  if (!text && !attaches.length) {
+    return;
+  }
+
   if (!checkPermissions(telegramUsername)) {
     return;
   }
+
   const users = getUsers();
   const username = users[<string>telegramUsername];
 
@@ -151,7 +170,11 @@ export async function createComment(msg: Message, issueKey: string, comment: str
     return;
   }
 
-  const formattedComment = `*${user.displayName}* says:\n${comment}`
+  const attachResult = await attachFile(issueKey, attaches[attaches.length - 1].file_id, transports) || [];
+  //  !file.jpg|thumbnail! 
+  const stringAttaches = attachResult.map((item: Attach) => `\n!${item.filename}|thumbnail!`);
+
+  const formattedComment = `*${user.displayName}* says:\n${comment}\n${stringAttaches}`
   const createdComment = await jira.createComment(issueKey, formattedComment);
   if (!createdComment) {
     return;
@@ -219,5 +242,14 @@ export async function inlineSearch(query: any, transports: TranportObjects) {
   } else {
     telegram.answerInlineQuery(query.id, []);
   }
+}
+
+async function attachFile(issueId: string, fileId: string, transports: TranportObjects) {
+  const { jira, telegram } = transports;
+  
+  const fileStream = telegram.getFile(fileId);
+  const attach = await jira.addAttachmentOnIssue(issueId, fileStream);
+
+  return attach;
 }
 
