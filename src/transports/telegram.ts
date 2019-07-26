@@ -14,6 +14,7 @@ class TelegramTransport extends EventEmitter {
   private options: TelegramBot.ConstructorOptions;
   private regExp: RegExp;
   private createIssueRegExp: RegExp;
+  private createCommentRegExp: RegExp;
 
   constructor(token: string, options: any) {
     super();
@@ -34,13 +35,15 @@ class TelegramTransport extends EventEmitter {
     }
     this.regExp = /([A-Z]{2,8}-[0-9]{1,5})/g;
     this.createIssueRegExp = /\/(?:create|add)(?:\s+(?:task|issue))?(?:\s+in)?\s+([A-Z]{2,8})\s+([^@]*)\s?(?:@(.+))?/;
+    this.createCommentRegExp = /\/comment\s([A-Z]{2,8}-[0-9]{1,5})\s((?:.|\n)*)/;
     this.connect();
   }
 
   private connect() {
     this.bot = new TelegramBot(this.token, this.options);
     this.bot.onText(this.regExp, this.onMessage.bind(this));
-    this.bot.onText(this.createIssueRegExp, this.onCreate.bind(this));
+    this.bot.onText(this.createIssueRegExp, this.onCreateIssue.bind(this));
+    this.bot.onText(this.createCommentRegExp, this.onCreateComment.bind(this));
     this.bot.on('callback_query', this.onCallbackRequest.bind(this));
     this.bot.on('inline_query', this.onInlineSearchRequest.bind(this));
   }
@@ -54,10 +57,14 @@ class TelegramTransport extends EventEmitter {
       return;
     }
 
+    if (msg.text.startsWith('/comment')) {
+      return;
+    }
+
     this.emit('message', msg, match);
   }
 
-  private async onCreate(msg: Message) {  
+  private async onCreateIssue(msg: Message) {  
     if (!msg.text) {
       return;
     }
@@ -65,6 +72,16 @@ class TelegramTransport extends EventEmitter {
     let [ command, project, summary, assigner ] = match;
     
     this.emit('createIssue', msg, project, summary, assigner);
+  }
+
+  private async onCreateComment(msg: Message) {  
+    if (!msg.text) {
+      return;
+    }
+    const match = msg.text.match(this.createCommentRegExp);
+    let [ command, issue, comment ] = match;
+    
+    this.emit('createComment', msg, issue, comment);
   }
 
   private async onCallbackRequest(callbackQuery: CallbackQuery) {

@@ -132,7 +132,41 @@ export async function createIssue(msg: Message, project: string, summary: string
   }
 
   telegram.sendMessage(<number>chatId, <string>resp, <SendMessageOptions>options);
+}
 
+export async function createComment(msg: Message, issueKey: string, comment: string, transports: TranportObjects) {
+  const telegramUsername = msg && msg.from && msg.from.username || '';
+  if (!checkPermissions(telegramUsername)) {
+    return;
+  }
+  const users = getUsers();
+  const username = users[<string>telegramUsername];
+
+  const { jira, telegram } = transports;
+  
+  telegram.sendChatAction(msg.chat.id, "typing");
+
+  const user = await jira.searchUser(username);
+  if (!user) {
+    return;
+  }
+
+  const formattedComment = `*${user.displayName}* says:\n${comment}`
+  const createdComment = await jira.createComment(issueKey, formattedComment);
+  if (!createdComment) {
+    return;
+  }
+
+  const chatId = msg.chat.id;
+  const resp = `The comment is successfully added. <a href="https://${process.env.JIRA_HOSTNAME}/browse/${issueKey}">Open issue</a>.`;
+  const options = {
+    parse_mode: 'HTML',
+    disable_web_page_preview: true,
+    reply_to_message_id: msg.message_id,
+    reply_markup: {}
+  };
+
+  telegram.sendMessage(<number>chatId, <string>resp, <SendMessageOptions>options);
 }
 
 export async function onKeyboardRequest(callbackQuery: CallbackQuery, match: string[], transports: TranportObjects) {

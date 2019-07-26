@@ -37,6 +37,9 @@ class App {
     this.transports.telegram.on('createIssue', (msg, project, summary, assigner) => {
       commands.createIssue(msg, project, summary, assigner, this.transports);
     });
+    this.transports.telegram.on('createComment', (msg, issueKey, comment) => {
+      commands.createComment(msg, issueKey, comment, this.transports);
+    });
     this.transports.telegram.on('keyboardRequest', (callbackQuery, match) => {
       commands.onKeyboardRequest(callbackQuery, match, this.transports);
     });

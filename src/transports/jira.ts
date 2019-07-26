@@ -54,8 +54,28 @@ class JiraTransport {
 
   public async createIssue(issue: object) {
     try {
-      const issues = await this.jira.addNewIssue(issue);
-      return issues;
+      const createdIssue = await this.jira.addNewIssue(issue);
+      return createdIssue;
+    } catch(e) {
+      console.log(e.message);
+      return false;
+    }
+  }
+
+  public async createComment(issueKey: string, comment: string) {
+    try {
+      const createdComment = await this.jira.addComment(issueKey, comment);
+      return createdComment;
+    } catch(e) {
+      console.log(e.message);
+      return false;
+    }
+  }
+
+  public async searchUser(username: string) {
+    try {
+      const users = await this.jira.searchUsers({ username });
+      return users.length ? users[0] : null;
     } catch(e) {
       console.log(e.message);
       return false;
