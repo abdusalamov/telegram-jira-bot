@@ -137,7 +137,7 @@ export async function createIssue(msg: Message, project: string, summary: string
 
 export async function createComment(msg: Message, issueKey: string, comment: string, transports: TranportObjects) {
   const telegramUsername = msg && msg.from && msg.from.username || '';
-  const text = comment || (msg && msg.reply_to_message && msg.reply_to_message.caption || '');
+  const text = comment || (msg && msg.reply_to_message && (msg.reply_to_message.caption || msg.reply_to_message.text) || '');
   const photos = msg && msg.reply_to_message && msg.reply_to_message.photo || [];
   const document = msg && msg.reply_to_message && msg.reply_to_message.document;
   const audio = msg && msg.reply_to_message && msg.reply_to_message.audio;
@@ -170,18 +170,24 @@ export async function createComment(msg: Message, issueKey: string, comment: str
     return;
   }
 
-  const attachResult = await attachFile(issueKey, attaches[attaches.length - 1].file_id, transports) || [];
+  const { issues: foundIssues } = await jira.getIssues([issueKey]);
+  if (!foundIssues || foundIssues.length === 0) {
+    return;
+  }
+
+  const lastAttach = attaches[attaches.length - 1];
+  const attachResult = await attachFile(issueKey, lastAttach && lastAttach.file_id, transports) || [];
   //  !file.jpg|thumbnail! 
   const stringAttaches = attachResult.map((item: Attach) => `\n!${item.filename}|thumbnail!`);
 
-  const formattedComment = `*${user.displayName}* says:\n${comment}\n${stringAttaches}`
+  const formattedComment = `*${user.displayName}* says:\n${text}\n${stringAttaches}`
   const createdComment = await jira.createComment(issueKey, formattedComment);
   if (!createdComment) {
     return;
   }
 
   const chatId = msg.chat.id;
-  const resp = `The comment is successfully added. <a href="https://${process.env.JIRA_HOSTNAME}/browse/${issueKey}">Open issue</a>.`;
+  const resp = `The comment in <a href="https://${process.env.JIRA_HOSTNAME}/browse/${foundIssues[0].key}">${foundIssues[0].key} ${foundIssues[0].fields.summary}</a> is successfully added.`;
   const options = {
     parse_mode: 'HTML',
     disable_web_page_preview: true,
@@ -246,6 +252,10 @@ export async function inlineSearch(query: any, transports: TranportObjects) {
 
 async function attachFile(issueId: string, fileId: string, transports: TranportObjects) {
   const { jira, telegram } = transports;
+  
+  if (!fileId) {
+    return [];
+  }
   
   const fileStream = telegram.getFile(fileId);
   const attach = await jira.addAttachmentOnIssue(issueId, fileStream);
