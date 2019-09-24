@@ -35,7 +35,7 @@ class TelegramTransport extends EventEmitter {
     }
     this.regExp = /([A-Z]{2,8}-[0-9]{1,5})/g;
     this.createIssueRegExp = /\/(?:create|add)(?:\s+(?:task|issue))?(?:\s+in)?\s+([A-Z]{2,8})\s+([^@]*)\s?(?:@(.+))?/;
-    this.createCommentRegExp = /\/comment\s([A-Z]{2,8}-[0-9]{1,5})\s?((?:.|\n)*)/;
+    this.createCommentRegExp = /\/(?:comment|addcomment)\s([A-Z]{2,8}-[0-9]{1,5})\s?((?:.|\n)*)/;
     this.connect();
   }
 
