@@ -14,7 +14,7 @@
     "@types/node": "^10.12.24",
     "@types/node-telegram-bot-api": "^0.30.4",
     "jira-client": "^6.6.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "node-telegram-bot-api": "^0.30.0",
     "socks5-https-client": "^1.2.1"
   },
